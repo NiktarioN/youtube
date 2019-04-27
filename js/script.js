@@ -5,6 +5,7 @@ const switcher = document.querySelector('#cbx'),
 let player,
 	night = false;
 
+// Функция появления меню при клике
 function bindSlideToogle(trigger, boxBody, content, openClass) {
 	let button = {
 		'element': document.querySelector(trigger),
@@ -25,41 +26,37 @@ function bindSlideToogle(trigger, boxBody, content, openClass) {
 		}
 	});
 }
-
 bindSlideToogle('.hamburger', '[data-slide="nav"]', '.header__menu', 'slide-active');
 
+// Функция изменения элементов для ночного режима
+function nightMode(hamburgerMenu, videoDescr, videoViews, headerDescr, logo, color, url) {
+	document.querySelectorAll(hamburgerMenu).forEach(item => {
+		item.style.stroke = color; // Перекрашиваем меню гамбургер
+	});
+	document.querySelectorAll(videoDescr).forEach(item => {
+		item.style.color = color; // Перекрашиваем описание видео
+	});
+	document.querySelectorAll(videoViews).forEach(item => {
+		item.style.color = color; // Перекрашиваем просмотры видео
+	});
+	document.querySelector(headerDescr).style.color = color; // Перекрашиваем надпись ночного режима
+	document.querySelector(logo).src = url; // Перекрашиваем иконку
+}
+
+// Функция включения или выключения ночного режима
 function switchMode() {
 	if (night === false) {
 		night = true;
 		document.body.classList.add('night');
-		document.querySelectorAll('.hamburger > line').forEach(item => {
-			item.style.stroke = '#fff'; // Перекрашиваем меню гамбургер
-		});
-		document.querySelectorAll('.videos__item-descr').forEach(item => {
-			item.style.color = '#fff'; // Перекрашиваем описание видео
-		});
-		document.querySelectorAll('.videos__item-views').forEach(item => {
-			item.style.color = '#fff'; // Перекрашиваем просмотры видео
-		});
-		document.querySelector('.header__item-descr').style.color = '#fff'; // Перекрашиваем надпись ночного режима
-		document.querySelector('.logo > img').src = 'logo/youtube_night.svg'; // Перекрашиваем иконку
+		nightMode('.hamburger > line', '.videos__item-descr', '.videos__item-views', '.header__item-descr', '.logo > img', '#fff', 'logo/youtube_night.svg');
 	} else {
 		night = false;
 		document.body.classList.remove('night');
-		document.querySelectorAll('.hamburger > line').forEach(item => {
-			item.style.stroke = '#000';
-		});
-		document.querySelectorAll('.videos__item-descr').forEach(item => {
-			item.style.color = '#000';
-		});
-		document.querySelectorAll('.videos__item-views').forEach(item => {
-			item.style.color = '#000';
-		});
-		document.querySelector('.header__item-descr').style.color = '#000';
-		document.querySelector('.logo > img').src = 'logo/youtube.svg';
+		nightMode('.hamburger > line', '.videos__item-descr', '.videos__item-views', '.header__item-descr', '.logo > img', '#000', 'logo/youtube.svg');
 	}
 }
 
+// Событие, которое отслеживает включение или выключение ночного режима
 switcher.addEventListener('change', () => {
 	switchMode();
 });
@@ -74,6 +71,7 @@ const data = [
 	['X9SmcY3lM-U', '7BvHoh0BrMw', 'mC8JW_aG2EM']
 ];
 
+// Функция создания карточки с видео
 more.addEventListener('click', () => {
 	const videosWrapper = document.querySelector('.videos__wrapper');
 	more.remove();
@@ -95,5 +93,82 @@ more.addEventListener('click', () => {
 		setTimeout(() => {
 			card.classList.remove('videos__item-active');
 		}, 10);
+		bindNewModal(card);
+	}
+	sliceTitle('.videos__item-descr', 90);
+});
+
+// Функция обрезания описания видео
+function sliceTitle(selector, count) {
+	document.querySelectorAll(selector).forEach(item => {
+		item.textContent.trim();
+		if (item.textContent.length < count) {
+			return;
+		} else {
+			const str = item.textContent.slice(0, count + 1) + "...";
+			item.textContent = str;
+		}
+	});
+}
+sliceTitle('.videos__item-descr', 90);
+
+// Функции для модального окна
+function openModal() {
+	modal.style.display = 'block';
+}
+
+function closeModal() {
+	modal.style.display = 'none';
+	player.stopVideo();
+}
+
+function bindModal(cards) {
+	cards.forEach(item => {
+		item.addEventListener('click', (e) => {
+			e.preventDefault();
+			const id = item.getAttribute('data-url');
+			loadVideo(id);
+			openModal();
+		});
+	});
+}
+
+bindModal(videos);
+
+function bindNewModal(cards) {
+	cards.addEventListener('click', (e) => {
+		e.preventDefault();
+		const id = cards.getAttribute('data-url');
+		loadVideo(id);
+		openModal();
+	});
+}
+
+modal.addEventListener('click', (e) => {
+	if (!e.target.classList.contains('modal__body')) {
+		closeModal();
 	}
 });
+
+function createVideo() {
+	var tag = document.createElement('script');
+
+	tag.src = "https://www.youtube.com/iframe_api";
+	var firstScriptTag = document.getElementsByTagName('script')[0];
+	firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+	setTimeout(() => {
+		player = new YT.Player('frame', {
+			height: '100%',
+			width: '100%',
+			videoId: 'M7lc1UVf-VE',
+		});
+	}, 300);
+}
+
+createVideo();
+
+// Функция загрузки видео
+function loadVideo(id) {
+	player.loadVideoById({'videoId': `${id}`});
+}
